@@ -776,31 +776,33 @@
                             <div class="puzzle-controls">
                                 <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
                             </div>
-                            <div><i class="fas fa-code"></i> digits = [int(d) for d in str(n)]</div>
+                            <div><i class="fas fa-code"></i> digits = count_digits(n)</div>
                         </div>
                         <div class="puzzle-card" draggable="true" data-order="3">
                             <div class="puzzle-controls">
                                 <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
                             </div>
-                            <div><i class="fas fa-code"></i> power = len(digits)</div>
+                            <div><i class="fas fa-code"></i> temp = n
+    total = 0</div>
                         </div>
                         <div class="puzzle-card" draggable="true" data-order="4">
                             <div class="puzzle-controls">
                                 <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
                             </div>
-                            <div><i class="fas fa-code"></i> total = sum(</div>
+                            <div><i class="fas fa-code"></i> while temp > 0:</div>
                         </div>
                         <div class="puzzle-card" draggable="true" data-order="5">
                             <div class="puzzle-controls">
                                 <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
                             </div>
-                            <div><i class="fas fa-code"></i> d ** power for d in digits</div>
+                            <div><i class="fas fa-code"></i> digit = temp % 10</div>
                         </div>
                         <div class="puzzle-card" draggable="true" data-order="6">
                             <div class="puzzle-controls">
                                 <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
                             </div>
-                            <div><i class="fas fa-code"></i> )</div>
+                            <div><i class="fas fa-code"></i> total += power(digit, digits)
+        temp //= 10</div>
                         </div>
                         <div class="puzzle-card" draggable="true" data-order="7">
                             <div class="puzzle-controls">
@@ -1465,31 +1467,33 @@
                     <div class="puzzle-controls">
                         <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
                     </div>
-                    <div><i class="fas fa-code"></i> digits = [int(d) for d in str(n)]</div>
+                    <div><i class="fas fa-code"></i> digits = count_digits(n)</div>
                 </div>
                 <div class="puzzle-card" draggable="true" data-order="3">
                     <div class="puzzle-controls">
                         <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
                     </div>
-                    <div><i class="fas fa-code"></i> power = len(digits)</div>
+                    <div><i class="fas fa-code"></i> temp = n
+    total = 0</div>
                 </div>
                 <div class="puzzle-card" draggable="true" data-order="4">
                     <div class="puzzle-controls">
                         <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
                     </div>
-                    <div><i class="fas fa-code"></i> total = sum(</div>
+                    <div><i class="fas fa-code"></i> while temp > 0:</div>
                 </div>
                 <div class="puzzle-card" draggable="true" data-order="5">
                     <div class="puzzle-controls">
                         <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
                     </div>
-                    <div><i class="fas fa-code"></i> d ** power for d in digits</div>
+                    <div><i class="fas fa-code"></i> digit = temp % 10</div>
                 </div>
                 <div class="puzzle-card" draggable="true" data-order="6">
                     <div class="puzzle-controls">
                         <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
                     </div>
-                    <div><i class="fas fa-code"></i> )</div>
+                    <div><i class="fas fa-code"></i> total += power(digit, digits)
+        temp //= 10</div>
                 </div>
                 <div class="puzzle-card" draggable="true" data-order="7">
                     <div class="puzzle-controls">
