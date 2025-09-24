@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Armstrong Treasure Hunt</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            overflow-x: hidden;
+        }
+
+        /* Entry Page Styles */
+        .entry-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .floating-numbers {
+            position: absolute;
+            font-size: 3rem;
+            color: #ffd700;
+            opacity: 0.7;
+            animation: float 6s ease-in-out infinite;
+            text-shadow: 0 0 20px #ffd700;
+        }
+
+        .floating-numbers:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+        .floating-numbers:nth-child(2) { top: 20%; right: 15%; animation-delay: 1.5s; }
+        .floating-numbers:nth-child(3) { bottom: 30%; left: 20%; animation-delay: 3s; }
+        .floating-numbers:nth-child(4) { bottom: 20%; right: 10%; animation-delay: 4.5s; }
+
+        .code-fragments {
+            position: absolute;
+            font-family: 'Courier New', monospace;
+            color: rgba(255, 215, 0, 0.3);
+            font-size: 0.9rem;
+            animation: drift 8s linear infinite;
+        }
+
+        .popup-man {
+            width: 200px;
+            height: 200px;
+            background: url('/placeholder.svg?height=200&width=200') center/contain no-repeat;
+            animation: slideIn 2s ease-out;
+        }
+
+        .welcome-box {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ffd700;
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 500px;
+            text-align: center;
+            animation: fadeIn 2.5s ease-out;
+        }
+
+        .welcome-text {
+            color: #ffd700;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 10px #ffd700;
+        }
+
+        .golden-scroll-btn {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: #1a1a2e;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .golden-scroll-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+            animation: glow 1.5s ease-in-out infinite alternate;
+        }
+
+        /* Puzzle Page Styles */
+        .puzzle-page {
+            min-height: 100vh;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="parchment" patternUnits="userSpaceOnUse" width="100" height="100"><rect width="100" height="100" fill="%23f4e4bc"/><circle cx="20" cy="20" r="1" fill="%23d4c4a8"/><circle cx="80" cy="40" r="1" fill="%23d4c4a8"/><circle cx="40" cy="80" r="1" fill="%23d4c4a8"/></pattern></defs><rect width="100" height="100" fill="url(%23parchment)"/></svg>') repeat;
+            padding: 2rem 0;
+        }
+
+        .puzzle-title {
+            text-align: center;
+            color: #8b4513;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .puzzle-card {
+            background: linear-gradient(145deg, #fff8dc, #f5deb3);
+            border: 2px solid #daa520;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 0.5rem;
+            cursor: grab;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            animation: dropIn 0.8s ease-out;
+            position: relative;
+        }
+
+        .puzzle-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        .puzzle-card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        /* Added styles for fixed puzzle pieces */
+        .puzzle-card.fixed {
+            background: linear-gradient(145deg, #90EE90, #98FB98);
+            border: 2px solid #32CD32;
+            cursor: default;
+        }
+
+        .puzzle-card.fixed::after {
+            content: '🔒';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #32CD32;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        /* Added styles for puzzle piece controls */
+        .puzzle-controls {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            display: none;
+            gap: 5px;
+        }
+
+        .puzzle-card:hover .puzzle-controls {
+            display: flex;
+        }
+
+        .control-btn {
+            background: #ffd700;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: #ffed4e;
+            transform: scale(1.1);
+        }
+
+        .drop-zone {
+            min-height: 80px;
+            border: 3px dashed #daa520;
+            border-radius: 10px;
+            margin: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 248, 220, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .drop-zone.drag-over {
+            background: rgba(218, 165, 32, 0.3);
+            border-color: #b8860b;
+        }
+
+        .drop-zone.filled {
+            background: rgba(144, 238, 144, 0.3);
+            border-color: #32cd32;
+        }
+
+        /* Added styles for drop zone controls */
+        .drop-zone-controls {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: none;
+            gap: 5px;
+        }
+
+        .drop-zone.filled:hover .drop-zone-controls {
+            display: flex;
+        }
+
+        .timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffd700;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            z-index: 1000;
+        }
+
+        /* Treasure Box Popup Styles */
+        .treasure-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .treasure-chest {
+            background: url('/placeholder.svg?height=300&width=400') center/contain no-repeat;
+            width: 400px;
+            height: 300px;
+            position: relative;
+            animation: chestAppear 1s ease-out;
+        }
+
+        .treasure-content {
+            position: absolute;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(139, 69, 19, 0.9);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 3px solid #ffd700;
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .treasure-title {
+            color: #ffd700;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px #ffd700;
+        }
+
+        .clue-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        /* Map Page Styles */
+        .map-page {
+            min-height: 100vh;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f4e4bc"/></svg>') repeat;
+            padding: 2rem;
+        }
+
+        .map-container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+            background: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/2nd%20peice%20map.png-kTg7jSsMnUgt1fJqeiogWiN69msden.jpeg') center/contain no-repeat;
+            height: 600px;
+            border: 3px solid #8b4513;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .treasure-dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #ff0000;
+            border-radius: 50%;
+            animation: blink 2s infinite;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        .treasure-dot:hover {
+            transform: scale(1.2);
+        }
+
+        .venue-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: #ffd700;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translateX(-50%);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Final Completion Styles */
+        .completion-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ffd700, #ffed4e, #ffa500);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .final-treasure {
+            width: 300px;
+            height: 300px;
+            background: url('/placeholder.svg?height=300&width=300') center/contain no-repeat;
+            animation: treasureBurst 2s ease-out;
+        }
+
+        .completion-text {
+            font-size: 2.5rem;
+            color: #8b4513;
+            text-align: center;
+            margin: 2rem 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ffd700;
+            animation: confettiFall 3s linear infinite;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); opacity: 0.7; }
+            50% { transform: translateY(-20px); opacity: 1; }
+        }
+
+        @keyframes drift {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+
+        @keyframes slideIn {
+            0% { transform: translateX(-100px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6); }
+            100% { box-shadow: 0 6px 30px rgba(255, 215, 0, 0.9); }
+        }
+
+        @keyframes dropIn {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes chestAppear {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        @keyframes treasureBurst {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); }
+            100% { transform: translateY(100vh) rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .floating-numbers { font-size: 2rem; }
+            .puzzle-title { font-size: 2rem; }
+            .welcome-box { margin: 1rem; padding: 1.5rem; }
+            .map-container { height: 400px; }
+            .completion-text { font-size: 1.8rem; }
+            .final-treasure { width: 200px; height: 200px; }
+            
+            /* Enhanced mobile responsiveness for better gameplay */
+            
+            /* Mobile-specific puzzle layout */
+            .puzzle-page .container {
+                padding: 0 10px;
+            }
+            
+            .puzzle-page .row {
+                flex-direction: column;
+            }
+            
+            .puzzle-page .col-md-6 {
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+            
+            /* Mobile puzzle pieces - larger touch targets */
+            .puzzle-card {
+                padding: 1rem;
+                margin: 0.5rem 0;
+                font-size: 0.95rem;
+                min-height: 70px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            /* Mobile drop zones - larger and more accessible */
+            .drop-zone {
+                min-height: 70px;
+                margin: 0.5rem 0;
+                padding: 1rem;
+                font-size: 0.95rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                touch-action: manipulation;
+            }
+            
+            /* Mobile controls - always visible and larger */
+            .puzzle-controls, .drop-zone-controls {
+                position: static !important;
+                display: flex !important;
+                margin-top: 8px;
+                justify-content: center;
+                gap: 8px;
+            }
+            
+            .control-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+                margin: 0 3px;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            /* Mobile timer - full width at top */
+            .timer {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                text-align: center;
+                font-size: 1rem;
+                padding: 10px 15px;
+                z-index: 1001;
+            }
+            
+            /* Mobile welcome page adjustments */
+            .welcome-text {
+                font-size: 1.1rem;
+                margin-bottom: 1.5rem;
+                line-height: 1.5;
+            }
+            
+            .golden-scroll-btn {
+                padding: 12px 30px;
+                font-size: 1.1rem;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            /* Mobile map adjustments */
+            .map-container {
+                height: 350px;
+                margin: 0 10px;
+            }
+            
+            .treasure-dot {
+                width: 30px;
+                height: 30px;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            /* Mobile modal adjustments */
+            .modal-dialog {
+                margin: 1rem;
+            }
+            
+            .modal-content {
+                margin: 0;
+            }
+            
+            /* Mobile treasure popup */
+            .treasure-content {
+                bottom: -60px;
+                min-width: 300px;
+                padding: 1.5rem;
+                margin: 0 1rem;
+            }
+            
+            .treasure-title {
+                font-size: 1.6rem;
+            }
+            
+            .clue-input {
+                font-size: 1.1rem;
+                padding: 12px;
+                touch-action: manipulation;
+            }
+            
+            /* Mobile completion page */
+            .completion-text {
+                font-size: 1.6rem;
+                margin: 1.5rem 0;
+                padding: 0 1rem;
+                line-height: 1.4;
+            }
+            
+            /* Improved button spacing for mobile */
+            .btn, .golden-scroll-btn {
+                margin: 0.5rem 0.25rem;
+                min-height: 44px;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            /* Better text readability on mobile */
+            body {
+                -webkit-text-size-adjust: 100%;
+                -ms-text-size-adjust: 100%;
+            }
+            
+            /* Prevent zoom on input focus */
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+            
+            /* Improved drag visual feedback for mobile */
+            .puzzle-card.dragging {
+                opacity: 0.8;
+                transform: scale(1.1) rotate(2deg);
+                z-index: 1000;
+            }
+            
+            /* Better hover states for touch devices */
+            .puzzle-card:active, .drop-zone:active {
+                transform: scale(0.98);
+            }
+        }
+        
+        /* Additional mobile optimizations for very small screens */
+        @media (max-width: 480px) {
+            .puzzle-title {
+                font-size: 1.6rem;
+                margin-bottom: 1rem;
+            }
+            
+            .welcome-box {
+                padding: 1rem;
+                margin: 0.5rem;
+            }
+            
+            .puzzle-card {
+                padding: 0.8rem;
+                font-size: 0.9rem;
+                min-height: 65px;
+            }
+            
+            .drop-zone {
+                min-height: 65px;
+                font-size: 0.9rem;
+                padding: 0.8rem;
+            }
+            
+            .timer {
+                font-size: 0.95rem;
+                padding: 8px 12px;
+            }
+            
+            .map-container {
+                height: 280px;
+            }
+            
+            .treasure-content {
+                min-width: 280px;
+                padding: 1.2rem;
+            }
+            
+            .completion-text {
+                font-size: 1.4rem;
+            }
+            
+            .final-treasure {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+        }
+        
+        /* Touch and drag improvements for mobile devices */
+        @media (hover: none) and (pointer: coarse) {
+            /* Always show controls on touch devices */
+            .puzzle-controls, .drop-zone-controls {
+                display: flex !important;
+                position: static !important;
+                margin-top: 8px;
+                justify-content: center;
+            }
+            
+            /* Remove hover effects that don't work on touch */
+            .puzzle-card:hover, .drop-zone:hover, .control-btn:hover {
+                transform: none;
+            }
+            
+            /* Better touch feedback */
+            .puzzle-card:active {
+                transform: scale(0.95);
+                opacity: 0.8;
+            }
+            
+            .control-btn:active {
+                transform: scale(0.9);
+                background: #ffed4e;
+            }
+            
+            .golden-scroll-btn:active {
+                transform: scale(0.95);
+            }
+            
+            .treasure-dot:active {
+                transform: scale(1.1);
+            }
+        }
+        
+        /* Landscape orientation optimizations for mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .puzzle-page .row {
+                flex-direction: row;
+            }
+            
+            .puzzle-page .col-md-6 {
+                width: 50%;
+                margin-bottom: 0;
+            }
+            
+            .timer {
+                position: fixed;
+                top: 5px;
+                right: 10px;
+                left: auto;
+                width: auto;
+                font-size: 0.9rem;
+                padding: 6px 12px;
+            }
+            
+            .puzzle-card, .drop-zone {
+                min-height: 55px;
+                font-size: 0.85rem;
+                padding: 0.6rem;
+            }
+            
+            .welcome-box {
+                max-width: 400px;
+            }
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <!-- Entry Page -->
+    <div id="entryPage" class="entry-page">
+        <div class="floating-numbers">153</div>
+        <div class="floating-numbers">370</div>
+        <div class="floating-numbers">371</div>
+        <div class="floating-numbers">407</div>
+        
+        <div class="code-fragments" style="top: 15%; left: 5%;">sum += digit³</div>
+        <div class="code-fragments" style="top: 60%; right: 10%;">if (sum == num)</div>
+        <div class="code-fragments" style="bottom: 25%; left: 15%;">digits.split()</div>
+        
+        <div class="container">
+            <div class="row align-items-center justify-content-center">
+                <div class="col-md-6 text-center">
+                    <div class="popup-man mb-4"></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="welcome-box">
+                        <div class="welcome-text">
+                            Welcome Explorer! Solve the Armstrong Puzzle to begin your journey through the ancient treasure hunt.
+                        </div>
+                        <button class="golden-scroll-btn" onclick="startPuzzle()">
+                            <i class="fas fa-scroll"></i> Start Puzzle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Puzzle Page -->
+    <div id="puzzlePage" class="puzzle-page hidden">
+        <div class="timer">
+            <i class="fas fa-clock"></i> Time: <span id="timerDisplay">00:00</span>
+        </div>
+        
+        <div class="container">
+            <h1 class="puzzle-title">Arrange the Armstrong Logic</h1>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h3 class="text-center mb-3" style="color: #8b4513;">Code Fragments</h3>
+                    <div id="puzzlePieces">
+                        <!-- Enhanced mobile-friendly puzzle pieces with better touch controls -->
+                        <div class="puzzle-card" draggable="true" data-order="1">
+                            <div class="puzzle-controls">
+                                <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                            </div>
+                            <div><i class="fas fa-code"></i> def is_armstrong(n):</div>
+                        </div>
+                        <div class="puzzle-card" draggable="true" data-order="2">
+                            <div class="puzzle-controls">
+                                <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                            </div>
+                            <div><i class="fas fa-code"></i> digits = [int(d) for d in str(n)]</div>
+                        </div>
+                        <div class="puzzle-card" draggable="true" data-order="3">
+                            <div class="puzzle-controls">
+                                <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                            </div>
+                            <div><i class="fas fa-code"></i> power = len(digits)</div>
+                        </div>
+                        <div class="puzzle-card" draggable="true" data-order="4">
+                            <div class="puzzle-controls">
+                                <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                            </div>
+                            <div><i class="fas fa-code"></i> total = sum(</div>
+                        </div>
+                        <div class="puzzle-card" draggable="true" data-order="5">
+                            <div class="puzzle-controls">
+                                <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                            </div>
+                            <div><i class="fas fa-code"></i> d ** power for d in digits</div>
+                        </div>
+                        <div class="puzzle-card" draggable="true" data-order="6">
+                            <div class="puzzle-controls">
+                                <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                            </div>
+                            <div><i class="fas fa-code"></i> )</div>
+                        </div>
+                        <div class="puzzle-card" draggable="true" data-order="7">
+                            <div class="puzzle-controls">
+                                <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                            </div>
+                            <div><i class="fas fa-code"></i> return total == n</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-warning mt-3" onclick="shufflePieces()">
+                        <i class="fas fa-random"></i> Shuffle Again
+                    </button>
+                </div>
+                
+                <div class="col-md-6">
+                    <h3 class="text-center mb-3" style="color: #8b4513;">Solution Grid</h3>
+                    <div id="solutionGrid">
+                        <div class="drop-zone" data-position="1">
+                            <div class="drop-zone-controls">
+                                <button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button>
+                                <button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button>
+                            </div>
+                            Drop Line 1 Here
+                        </div>
+                        <div class="drop-zone" data-position="2">
+                            <div class="drop-zone-controls">
+                                <button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button>
+                                <button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button>
+                            </div>
+                            Drop Line 2 Here
+                        </div>
+                        <div class="drop-zone" data-position="3">
+                            <div class="drop-zone-controls">
+                                <button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button>
+                                <button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button>
+                            </div>
+                            Drop Line 3 Here
+                        </div>
+                        <div class="drop-zone" data-position="4">
+                            <div class="drop-zone-controls">
+                                <button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button>
+                                <button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button>
+                            </div>
+                            Drop Line 4 Here
+                        </div>
+                        <div class="drop-zone" data-position="5">
+                            <div class="drop-zone-controls">
+                                <button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button>
+                                <button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button>
+                            </div>
+                            Drop Line 5 Here
+                        </div>
+                        <div class="drop-zone" data-position="6">
+                            <div class="drop-zone-controls">
+                                <button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button>
+                                <button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button>
+                            </div>
+                            Drop Line 6 Here
+                        </div>
+                        <div class="drop-zone" data-position="7">
+                            <div class="drop-zone-controls">
+                                <button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button>
+                                <button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button>
+                            </div>
+                            Drop Line 7 Here
+                        </div>
+                    </div>
+                    <div id="puzzleResult" class="mt-3 text-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Treasure Box Popup -->
+    <div id="treasurePopup" class="treasure-popup hidden">
+        <div class="treasure-chest">
+            <div class="treasure-content">
+                <h2 class="treasure-title">The Treasure Awaits!</h2>
+                <input type="text" class="clue-input" id="clueInput" placeholder="Enter the Clue Word" maxlength="10">
+                <button class="golden-scroll-btn" onclick="unlockTreasure()">
+                    <i class="fas fa-unlock"></i> Unlock Treasure
+                </button>
+                <div id="treasureResult" class="mt-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Page -->
+    <div id="mapPage" class="map-page hidden">
+        <div class="container">
+            <h1 class="text-center mb-4" style="color: #8b4513; font-size: 2.5rem;">Algorift Treasure Map</h1>
+            
+            <div class="map-container">
+                <div class="treasure-dot" style="top: 50%; left: 24%;" 
+                     
+                     data-floor="Second Floor" 
+                     
+                     data-description="Follow the golden wheel's direction to find your next clue. The ancient compass points to hidden treasures within these walls."
+                     onclick="showVenueDetails(this)"></div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button class="golden-scroll-btn ms-3" onclick="completeTreasureHunt()">
+                    <i class="fas fa-trophy"></i> Complete Hunt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Completion Page -->
+    <div id="completionPage" class="completion-page hidden">
+        <div class="final-treasure"></div>
+        <h1 class="completion-text">Congratulations!<br>You solved the Armstrong Hunt<br>and found the Treasure!</h1>
+        
+        <div class="mt-4">
+            <button class="golden-scroll-btn me-3" onclick="playAgain()">
+                <i class="fas fa-redo"></i> Play Again
+            </button>
+            <button class="golden-scroll-btn" onclick="exitGame()">
+                <i class="fas fa-sign-out-alt"></i> Exit
+            </button>
+        </div>
+        
+        <div class="confetti" style="left: 10%; animation-delay: 0s; background: #ff6b6b;"></div>
+        <div class="confetti" style="left: 20%; animation-delay: 0.5s; background: #4ecdc4;"></div>
+        <div class="confetti" style="left: 30%; animation-delay: 1s; background: #45b7d1;"></div>
+        <div class="confetti" style="left: 40%; animation-delay: 1.5s; background: #96ceb4;"></div>
+        <div class="confetti" style="left: 50%; animation-delay: 2s; background: #ffeaa7;"></div>
+        <div class="confetti" style="left: 60%; animation-delay: 2.5s; background: #dda0dd;"></div>
+        <div class="confetti" style="left: 70%; animation-delay: 3s; background: #98d8c8;"></div>
+        <div class="confetti" style="left: 80%; animation-delay: 3.5s; background: #f7dc6f;"></div>
+        <div class="confetti" style="left: 90%; animation-delay: 4s; background: #bb8fce;"></div>
+    </div>
+
+    <!-- Venue Details Modal -->
+    <div class="modal fade" id="venueModal" tabindex="-1" aria-labelledby="venueModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="venueModalLabel">Venue Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h4 id="venueTitle"></h4>
+                    <p><strong>Floor:</strong> <span id="venueFloor"></span></p>
+                    <p><strong>Location:</strong> <span id="venueLocation"></span></p>
+                    <p id="venueDescription"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 'entry';
+        let puzzleStartTime;
+        let timerInterval;
+        let puzzlesSolved = 0;
+        let draggedElement = null;
+
+        // Game Flow Functions
+        function startPuzzle() {
+            showPage('puzzle');
+            startTimer();
+            shufflePieces();
+        }
+
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('[id$="Page"]').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // Show target page
+            document.getElementById(pageId + 'Page').classList.remove('hidden');
+            currentPage = pageId;
+        }
+
+        function startTimer() {
+            puzzleStartTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - puzzleStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('timerDisplay').textContent = `${minutes}:${seconds}`;
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function shufflePieces() {
+            const container = document.getElementById('puzzlePieces');
+            const pieces = Array.from(container.children).filter(child => child.classList.contains('puzzle-card'));
+            
+            // Remove fixed status from all pieces
+            pieces.forEach(piece => {
+                piece.classList.remove('fixed');
+                piece.draggable = true;
+                // Reset control button to 'Fix' state
+                const fixButton = piece.querySelector('.control-btn[onclick*="fixPiece"]');
+                if (fixButton) {
+                    fixButton.textContent = '📌';
+                    fixButton.title = 'Fix';
+                }
+            });
+            
+            // Shuffle array
+            for (let i = pieces.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
+            }
+            
+            // Clear container and re-add shuffled pieces
+            pieces.forEach(piece => container.removeChild(piece));
+            pieces.forEach((piece, index) => {
+                piece.style.animationDelay = `${index * 0.1}s`;
+                container.appendChild(piece);
+            });
+        }
+
+        function fixPiece(button) {
+            const piece = button.closest('.puzzle-card');
+            if (piece.classList.contains('fixed')) {
+                // Unfix the piece
+                piece.classList.remove('fixed');
+                piece.draggable = true;
+                button.textContent = '📌';
+                button.title = 'Fix';
+            } else {
+                // Fix the piece
+                piece.classList.add('fixed');
+                piece.draggable = false;
+                button.textContent = '🔓';
+                button.title = 'Unfix';
+            }
+        }
+
+        function swapWithNext(button) {
+            const currentZone = button.closest('.drop-zone');
+            const currentPosition = parseInt(currentZone.dataset.position);
+            const nextPosition = currentPosition + 1;
+            
+            if (nextPosition <= 7) {
+                const nextZone = document.querySelector(`[data-position="${nextPosition}"]`);
+                
+                if (currentZone.classList.contains('filled') && nextZone.classList.contains('filled')) {
+                    // Both zones have pieces, swap them
+                    const currentPiece = currentZone.querySelector('.puzzle-card');
+                    const nextPiece = nextZone.querySelector('.puzzle-card');
+                    
+                    // Temporarily store pieces
+                    const tempDiv = document.createElement('div');
+                    currentZone.appendChild(tempDiv);
+                    
+                    // Swap pieces
+                    currentZone.removeChild(currentPiece);
+                    nextZone.removeChild(nextPiece);
+                    
+                    currentZone.appendChild(nextPiece);
+                    nextZone.appendChild(currentPiece);
+                    
+                    currentZone.removeChild(tempDiv);
+                    
+                    checkPuzzleCompletion();
+                } else if (currentZone.classList.contains('filled') && !nextZone.classList.contains('filled')) {
+                    // Move current piece to next empty zone
+                    const currentPiece = currentZone.querySelector('.puzzle-card');
+                    currentZone.removeChild(currentPiece);
+                    currentZone.classList.remove('filled');
+                    // Re-add default content and controls to the now empty current zone
+                    currentZone.innerHTML = `Drop Line ${currentPosition} Here<div class="drop-zone-controls"><button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button><button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button></div>`;
+                    
+                    nextZone.innerHTML = ''; // Clear next zone before appending
+                    nextZone.classList.add('filled');
+                    nextZone.appendChild(currentPiece);
+                    
+                    // Re-add controls to the filled next zone
+                    const controlsDiv = document.createElement('div');
+                    controlsDiv.className = 'drop-zone-controls';
+                    controlsDiv.innerHTML = '<button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button><button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button>';
+                    nextZone.appendChild(controlsDiv);
+                    
+                    checkPuzzleCompletion();
+                }
+            }
+        }
+
+        function removePiece(button) {
+            const zone = button.closest('.drop-zone');
+            const piece = zone.querySelector('.puzzle-card');
+            
+            if (piece) {
+                // Return piece to the pieces container
+                const container = document.getElementById('puzzlePieces');
+                piece.draggable = true;
+                piece.style.margin = '0.5rem';
+                piece.style.cursor = 'grab';
+                piece.classList.remove('fixed');
+                // Reset fix button to default state
+                const fixButton = piece.querySelector('.control-btn[onclick*="fixPiece"]');
+                if (fixButton) {
+                    fixButton.textContent = '📌';
+                    fixButton.title = 'Fix';
+                }
+                container.appendChild(piece);
+                
+                // Reset drop zone
+                const position = zone.dataset.position;
+                zone.classList.remove('filled');
+                zone.innerHTML = `Drop Line ${position} Here<div class="drop-zone-controls"><button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button><button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button></div>`;
+                
+                checkPuzzleCompletion();
+            }
+        }
+
+        // Drag and Drop Logic
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDragAndDrop();
+            setupMobileOptimizations();
+        });
+
+        function setupDragAndDrop() {
+            // Add drag event listeners to puzzle pieces
+            document.addEventListener('dragstart', function(e) {
+                if (e.target.classList.contains('puzzle-card') && !e.target.classList.contains('fixed')) {
+                    draggedElement = e.target;
+                    e.target.classList.add('dragging');
+                }
+            });
+
+            document.addEventListener('dragend', function(e) {
+                if (e.target.classList.contains('puzzle-card')) {
+                    e.target.classList.remove('dragging');
+                }
+            });
+
+            // Add drop event listeners to drop zones
+            document.addEventListener('dragover', function(e) {
+                if (e.target.classList.contains('drop-zone')) {
+                    e.preventDefault();
+                    e.target.classList.add('drag-over');
+                }
+            });
+
+            document.addEventListener('dragleave', function(e) {
+                if (e.target.classList.contains('drop-zone')) {
+                    e.target.classList.remove('drag-over');
+                }
+            });
+
+            document.addEventListener('drop', function(e) {
+                if (e.target.classList.contains('drop-zone') && draggedElement) {
+                    e.preventDefault();
+                    e.target.classList.remove('drag-over');
+                    
+                    // If zone already has a piece, return it to pieces container
+                    const existingPiece = e.target.querySelector('.puzzle-card');
+                    if (existingPiece) {
+                        const container = document.getElementById('puzzlePieces');
+                        existingPiece.draggable = true;
+                        existingPiece.style.margin = '0.5rem';
+                        existingPiece.style.cursor = 'grab';
+                        // Ensure existing piece's fix button is reset if it was fixed
+                        const fixButton = existingPiece.querySelector('.control-btn[onclick*="fixPiece"]');
+                        if (fixButton) {
+                            fixButton.textContent = '📌';
+                            fixButton.title = 'Fix';
+                            existingPiece.classList.remove('fixed');
+                        }
+                        container.appendChild(existingPiece);
+                    }
+                    
+                    // Clear the drop zone's current content (if any)
+                    e.target.innerHTML = '';
+                    e.target.classList.add('filled');
+                    
+                    // Clone the dragged element
+                    const clonedElement = draggedElement.cloneNode(true);
+                    clonedElement.draggable = false;
+                    clonedElement.style.margin = '0';
+                    clonedElement.style.cursor = 'default';
+                    
+                    e.target.appendChild(clonedElement);
+                    
+                    // Add controls to the drop zone
+                    const controlsDiv = document.createElement('div');
+                    controlsDiv.className = 'drop-zone-controls';
+                    controlsDiv.innerHTML = '<button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button><button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button>';
+                    e.target.appendChild(controlsDiv);
+                    
+                    // Remove original element
+                    draggedElement.remove();
+                    draggedElement = null;
+                    
+                    checkPuzzleCompletion();
+                }
+            });
+
+            let touchStartX, touchStartY, touchElement, touchStartTime;
+            
+            document.addEventListener('touchstart', function(e) {
+                if (e.target.closest('.puzzle-card') && !e.target.closest('.puzzle-card').classList.contains('fixed')) {
+                    touchElement = e.target.closest('.puzzle-card');
+                    const touch = e.touches[0];
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    touchStartTime = Date.now();
+                    
+                    // Provide immediate visual feedback
+                    touchElement.style.opacity = '0.8';
+                    touchElement.style.transform = 'scale(1.05)';
+                    touchElement.style.zIndex = '1000';
+                    touchElement.style.transition = 'none';
+                }
+            }, { passive: true });
+            
+            document.addEventListener('touchmove', function(e) {
+                if (touchElement) {
+                    const touch = e.touches[0];
+                    const deltaX = Math.abs(touch.clientX - touchStartX);
+                    const deltaY = Math.abs(touch.clientY - touchStartY);
+                    
+                    // Only prevent default and start dragging if significant movement
+                    if (deltaX > 10 || deltaY > 10) {
+                        e.preventDefault();
+                        touchElement.style.position = 'fixed';
+                        touchElement.style.left = (touch.clientX - 75) + 'px';
+                        touchElement.style.top = (touch.clientY - 35) + 'px';
+                        touchElement.style.pointerEvents = 'none';
+                        touchElement.style.width = '150px';
+                    }
+                }
+            }, { passive: false });
+            
+            document.addEventListener('touchend', function(e) {
+                if (touchElement) {
+                    const touch = e.changedTouches[0];
+                    const touchDuration = Date.now() - touchStartTime;
+                    
+                    // Reset touch element styles
+                    touchElement.style.opacity = '';
+                    touchElement.style.transform = '';
+                    touchElement.style.position = '';
+                    touchElement.style.left = '';
+                    touchElement.style.top = '';
+                    touchElement.style.zIndex = '';
+                    touchElement.style.pointerEvents = '';
+                    touchElement.style.transition = '';
+                    touchElement.style.width = '';
+                    
+                    // Only process as drop if it was a drag (not a tap)
+                    const deltaX = Math.abs(touch.clientX - touchStartX);
+                    const deltaY = Math.abs(touch.clientY - touchStartY);
+                    
+                    if ((deltaX > 10 || deltaY > 10) && touchDuration > 200) {
+                        const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+                        const dropZone = dropTarget?.closest('.drop-zone');
+                        
+                        if (dropZone) {
+                            // Simulate drop event
+                            const existingPiece = dropZone.querySelector('.puzzle-card');
+                            if (existingPiece) {
+                                const container = document.getElementById('puzzlePieces');
+                                existingPiece.draggable = true;
+                                existingPiece.style.margin = '0.5rem';
+                                existingPiece.style.cursor = 'grab';
+                                const fixButton = existingPiece.querySelector('.control-btn[onclick*="fixPiece"]');
+                                if (fixButton) {
+                                    fixButton.textContent = '📌';
+                                    fixButton.title = 'Fix';
+                                    existingPiece.classList.remove('fixed');
+                                }
+                                container.appendChild(existingPiece);
+                            }
+                            
+                            dropZone.innerHTML = '';
+                            dropZone.classList.add('filled');
+                            
+                            const clonedElement = touchElement.cloneNode(true);
+                            clonedElement.draggable = false;
+                            clonedElement.style.margin = '0';
+                            clonedElement.style.cursor = 'default';
+                            
+                            dropZone.appendChild(clonedElement);
+                            
+                            const controlsDiv = document.createElement('div');
+                            controlsDiv.className = 'drop-zone-controls';
+                            controlsDiv.innerHTML = '<button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button><button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button>';
+                            dropZone.appendChild(controlsDiv);
+                            
+                            touchElement.remove();
+                            checkPuzzleCompletion();
+                            
+                            // Provide haptic feedback if available
+                            if (navigator.vibrate) {
+                                navigator.vibrate(50);
+                            }
+                        }
+                    }
+                    
+                    touchElement = null;
+                }
+            }, { passive: true });
+        }
+
+        function setupMobileOptimizations() {
+            // Prevent zoom on double tap
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // Add visual feedback for touch interactions
+            document.addEventListener('touchstart', function(e) {
+                if (e.target.classList.contains('golden-scroll-btn') || 
+                    e.target.classList.contains('control-btn') ||
+                    e.target.classList.contains('treasure-dot')) {
+                    e.target.style.transform = 'scale(0.95)';
+                }
+            }, { passive: true });
+            
+            document.addEventListener('touchend', function(e) {
+                if (e.target.classList.contains('golden-scroll-btn') || 
+                    e.target.classList.contains('control-btn') ||
+                    e.target.classList.contains('treasure-dot')) {
+                    setTimeout(() => {
+                        e.target.style.transform = '';
+                    }, 150);
+                }
+            }, { passive: true });
+            
+            // Optimize viewport for mobile
+            const viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+                viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+            }
+        }
+
+        function checkPuzzleCompletion() {
+            const dropZones = document.querySelectorAll('.drop-zone');
+            const filledZones = document.querySelectorAll('.drop-zone.filled');
+            
+            if (filledZones.length === dropZones.length) {
+                // Check if the order is correct
+                let isCorrect = true;
+                filledZones.forEach((zone, index) => {
+                    const card = zone.querySelector('.puzzle-card');
+                    if (card && parseInt(card.dataset.order) !== parseInt(zone.dataset.position)) {
+                        isCorrect = false;
+                    }
+                });
+                
+                const resultDiv = document.getElementById('puzzleResult');
+                if (isCorrect) {
+                    resultDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Perfect! The Armstrong code is complete!</div>';
+                    
+                    // Add green glow effect
+                    filledZones.forEach(zone => {
+                        zone.style.boxShadow = '0 0 20px #32cd32';
+                    });
+                    
+                    // Show confetti and reveal clue
+                    setTimeout(() => {
+                        stopTimer();
+                        resultDiv.innerHTML += '<div class="alert alert-warning mt-2"><i class="fas fa-key"></i> Secret Code Revealed: <strong>153</strong></div>';
+                        setTimeout(() => {
+                            showTreasurePopup();
+                        }, 2000);
+                    }, 2000);
+                } else {
+                    resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Not yet complete, try again.</div>';
+                }
+            }
+        }
+
+        function showTreasurePopup() {
+            document.getElementById('treasurePopup').classList.remove('hidden');
+            document.getElementById('clueInput').focus();
+        }
+
+        function unlockTreasure() {
+            const clueInput = document.getElementById('clueInput');
+            const resultDiv = document.getElementById('treasureResult');
+            
+            if (clueInput.value.toLowerCase() === '153') { // Case-insensitive check
+                resultDiv.innerHTML = '<div class="text-success"><i class="fas fa-unlock"></i> Treasure Unlocked!</div>';
+                
+                setTimeout(() => {
+                    document.getElementById('treasurePopup').classList.add('hidden');
+                    puzzlesSolved++;
+                    showPage('map');
+                }, 1500);
+            } else {
+                resultDiv.innerHTML = '<div class="text-danger"><i class="fas fa-lock"></i> Incorrect! Try again.</div>';
+                
+                // Shake animation
+                const chest = document.querySelector('.treasure-chest');
+                chest.style.animation = 'none';
+                setTimeout(() => {
+                    chest.style.animation = 'chestAppear 0.5s ease-out, shake 0.5s ease-in-out';
+                }, 10);
+            }
+        }
+
+        function showVenueDetails(dot) {
+            const venue = dot.dataset.venue;
+            const floor = dot.dataset.floor;
+            const location = dot.dataset.location || '';
+            const description = dot.dataset.description || '';
+            
+            document.getElementById('venueTitle').textContent = venue;
+            document.getElementById('venueFloor').textContent = floor;
+            document.getElementById('venueLocation').textContent = location;
+            document.getElementById('venueDescription').textContent = description;
+            
+            const modal = new bootstrap.Modal(document.getElementById('venueModal'));
+            modal.show();
+        }
+
+        function nextPuzzle() {
+            if (puzzlesSolved < 3) {
+                // Reset puzzle for next round
+                resetPuzzle();
+                showPage('puzzle');
+                startTimer();
+            } else {
+                completeTreasureHunt();
+            }
+        }
+
+        function resetPuzzle() {
+            // Clear drop zones and re-initialize them with controls
+            document.querySelectorAll('.drop-zone').forEach((zone, index) => {
+                const position = zone.dataset.position;
+                zone.innerHTML = `Drop Line ${position} Here<div class="drop-zone-controls"><button class="control-btn" onclick="swapWithNext(this)" title="Swap with next">🔄</button><button class="control-btn" onclick="removePiece(this)" title="Remove">❌</button></div>`;
+                zone.classList.remove('filled');
+                zone.style.boxShadow = '';
+            });
+            
+            const container = document.getElementById('puzzlePieces');
+            container.innerHTML = `
+                <div class="puzzle-card" draggable="true" data-order="1">
+                    <div class="puzzle-controls">
+                        <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                    </div>
+                    <div><i class="fas fa-code"></i> def is_armstrong(n):</div>
+                </div>
+                <div class="puzzle-card" draggable="true" data-order="2">
+                    <div class="puzzle-controls">
+                        <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                    </div>
+                    <div><i class="fas fa-code"></i> digits = [int(d) for d in str(n)]</div>
+                </div>
+                <div class="puzzle-card" draggable="true" data-order="3">
+                    <div class="puzzle-controls">
+                        <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                    </div>
+                    <div><i class="fas fa-code"></i> power = len(digits)</div>
+                </div>
+                <div class="puzzle-card" draggable="true" data-order="4">
+                    <div class="puzzle-controls">
+                        <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                    </div>
+                    <div><i class="fas fa-code"></i> total = sum(</div>
+                </div>
+                <div class="puzzle-card" draggable="true" data-order="5">
+                    <div class="puzzle-controls">
+                        <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                    </div>
+                    <div><i class="fas fa-code"></i> d ** power for d in digits</div>
+                </div>
+                <div class="puzzle-card" draggable="true" data-order="6">
+                    <div class="puzzle-controls">
+                        <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                    </div>
+                    <div><i class="fas fa-code"></i> )</div>
+                </div>
+                <div class="puzzle-card" draggable="true" data-order="7">
+                    <div class="puzzle-controls">
+                        <button class="control-btn" onclick="fixPiece(this)" title="Fix/Unfix">📌</button>
+                    </div>
+                    <div><i class="fas fa-code"></i> return total == n</div>
+                </div>
+            `;
+            
+            // Clear result and input fields
+            document.getElementById('puzzleResult').innerHTML = '';
+            document.getElementById('clueInput').value = '';
+            document.getElementById('treasureResult').innerHTML = '';
+            
+            shufflePieces(); // Re-shuffle the pieces after resetting
+        }
+
+        function completeTreasureHunt() {
+            stopTimer();
+            showPage('completion');
+            createConfetti();
+        }
+
+        function createConfetti() {
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd', '#98d8c8', '#f7dc6f', '#bb8fce'];
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDelay = Math.random() * 3 + 's';
+                    document.getElementById('completionPage').appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 100);
+            }
+        }
+
+        function playAgain() {
+            puzzlesSolved = 0;
+            resetPuzzle();
+            showPage('entry');
+        }
+
+        function exitGame() {
+            if (confirm('Are you sure you want to exit the Armstrong Treasure Hunt?')) {
+                window.close();
+            }
+        }
+
+        // Add CSS animation for shake effect
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Add tooltip functionality for treasure dots
+        document.addEventListener('mouseover', function(e) {
+            if (e.target.classList.contains('treasure-dot')) {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'venue-tooltip';
+                tooltip.innerHTML = `<strong>Venue:</strong> ${e.target.dataset.venue}<br><strong>Floor:</strong> ${e.target.dataset.floor}`;
+                tooltip.style.left = e.target.offsetLeft + 'px';
+                tooltip.style.top = (e.target.offsetTop - 60) + 'px';
+                e.target.parentElement.appendChild(tooltip);
+            }
+        });
+
+        document.addEventListener('mouseout', function(e) {
+            if (e.target.classList.contains('treasure-dot')) {
+                const tooltip = e.target.parentElement.querySelector('.venue-tooltip');
+                if (tooltip) {
+                    tooltip.remove();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
